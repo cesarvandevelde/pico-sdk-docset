@@ -1,0 +1,70 @@
+PROJECT_NAME   = "Raspberry Pi Pico SDK"
+PROJECT_BRIEF  = "Raspberry Pi Pico SDK documentation"
+PROJECT_NUMBER = 1.0.1
+
+STRIP_FROM_PATH         = pico-sdk/src/ \
+                          pico-sdk/src/common/ \
+                          pico-sdk/src/rp2040/ \
+                          pico-sdk/src/rp2_common/ \
+                          pico-sdk/docs/
+
+FILE_PATTERNS          = *.h \
+                         *.cpp \
+                         *.c \
+                         *.S \
+                         *.s \
+                         *.md
+
+USE_MDFILE_AS_MAINPAGE = pico-sdk/docs/mainpage.md
+LAYOUT_FILE = overrides/DoxygenLayout.xml
+HTML_FOOTER = overrides/footer.html
+HTML_HEADER = overrides/header.html
+
+OPTIMIZE_OUTPUT_FOR_C = YES
+
+HTML_EXTRA_STYLESHEET  = pico-sdk/docs/normalise.css overrides/main.css overrides/styles.css
+HTML_EXTRA_FILES       = pico-sdk/docs/logo-mobile.svg pico-sdk/docs/logo.svg pico-sdk/docs/search.svg \
+                         pico-sdk/docs/main.js pico-sdk/docs/pico.jpg pico-sdk/docs/rp2040.png
+GENERATE_TREEVIEW      = YES # This is needed as it wraps the content area in an HTML tag that we need to use
+HTML_COLORSTYLE_HUE = 350
+HTML_COLORSTYLE_SAT = 200
+HTML_COLORSTYLE_GAMMA = 150
+GENERATE_LATEX = NO
+GENERATE_XML = YES
+GROUP_GRAPHS = NO
+
+ALIASES += tag=@internal
+ALIASES += end=@internal
+
+INPUT                  = pico-sdk/docs/index.h \
+                         pico-sdk/src/ \
+                         pico-sdk/src/common/ \
+                         pico-sdk/src/rp2040/ \
+                         pico-sdk/src/rp2_common/ \
+                         pico-sdk/docs/
+
+EXCLUDE                = pico-sdk/src/rp2040/hardware_regs
+EXAMPLE_PATH           = pico-examples/
+RECURSIVE              = YES
+
+# This is needed as we have a number of static inline functions that need to be documented.
+EXTRACT_STATIC         = YES
+
+EXTRACT_ALL            = NO
+ALWAYS_DETAILED_SEC    = NO
+
+# Need these next options to ensure that functions with modifiers do not confuse the Doxygen parser.
+# And any further function modifiers here.
+MACRO_EXPANSION        = YES
+
+PREDEFINED             = __not_in_flash_func(x) \
+                         __time_critical_func(x) \
+                         __not_in_flash(x)= \
+                         __no_inline_not_in_flash(x)= \
+                         __attribute__(x)=
+
+JAVADOC_AUTOBRIEF      = YES
+
+GENERATE_DOCSET   = YES
+DISABLE_INDEX     = YES
+SEARCHENGINE      = NO

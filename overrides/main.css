@@ -1,0 +1,57 @@
+/************************/
+/*       GENERAL        */
+/************************/
+
+body {
+    color: #1e1e1e;
+}
+
+h1, h2, h3, h4, h5, h6, p, a, li, span, blockquote, input, textarea, select, label {
+    font-family: 'Roboto', sans-serif;
+}
+
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+
+/* Sidebar */
+#top {
+	display: none;
+}
+
+
+/* Content */
+#doc-content {
+	padding: 25px 50px 25px 50px;
+	margin: 0 !important;
+	height: auto !important;
+}
+
+
+/* Hide the default doxygen stuff that we dont want */
+.ui-resizable-handle {
+	display: none !important;
+}
+#nav-sync {
+	display: none !important;
+}
+#nav-tree {
+	height: 100% !important;
+	background: none;
+    overflow: auto;
+    padding: 35px;
+    box-sizing: border-box;
+}
+#nav-path, #side-nav {
+	display: none !important;
+}
+
+
+div.line,
+div.line a,
+div.line span {
+	font-family: monospace;
+}
