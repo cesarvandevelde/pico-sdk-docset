@@ -5,10 +5,11 @@ from pathlib import Path
 
 ROOT_DIR = Path(__file__).parent
 HTML_DIR = ROOT_DIR / "html"
-DOCSET_DIR = ROOT_DIR / "Pico SDK.docset"
+DOCSET_DIR = ROOT_DIR / "Raspberry Pi Pico SDK.docset"
 DOCSET_CONTENTS_DIR = DOCSET_DIR / "Contents"
 DOCSET_RESOURCES_DIR = DOCSET_CONTENTS_DIR / "Resources"
 DOCSET_DOCUMENTS_DIR = DOCSET_RESOURCES_DIR / "Documents"
+ARCHIVE_PATH = ROOT_DIR / "Raspberry_Pi_Pico_SDK.tgz"
 
 
 class DocsetException(RuntimeError):
@@ -80,12 +81,20 @@ def build_index():
         raise DocsetException("Failed to build docset index") from e
 
 
+def make_archive():
+    subprocess.run(
+        ["tar", "--exclude=\'.DS_Store\'", "-cvzf", ARCHIVE_PATH, DOCSET_DIR],
+        cwd=ROOT_DIR
+    )
+
+
 def make_docset():
     check_dependencies()
     run_doxygen()
     create_dirs()
     copy_files()
     build_index()
+    make_archive()
 
 
 if __name__ == "__main__":
@@ -97,4 +106,4 @@ if __name__ == "__main__":
         exit(-1)
     else:
         print("Presto!")
-        print(F"Docset can be found at {DOCSET_DIR}")
+        print(f"Docset can be found at {DOCSET_DIR}")
