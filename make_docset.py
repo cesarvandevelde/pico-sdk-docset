@@ -1,5 +1,8 @@
 import subprocess
 import shutil
+import sqlite3
+import re
+from urllib.parse import quote as url_escape
 from pathlib import Path
 
 
@@ -9,7 +12,23 @@ DOCSET_DIR = ROOT_DIR / "Raspberry Pi Pico SDK.docset"
 DOCSET_CONTENTS_DIR = DOCSET_DIR / "Contents"
 DOCSET_RESOURCES_DIR = DOCSET_CONTENTS_DIR / "Resources"
 DOCSET_DOCUMENTS_DIR = DOCSET_RESOURCES_DIR / "Documents"
+DB_PATH = DOCSET_RESOURCES_DIR / "docSet.dsidx"
 ARCHIVE_PATH = ROOT_DIR / "Raspberry_Pi_Pico_SDK.tgz"
+
+TOKEN_QUERY = """
+SELECT
+    meta.ZANCHOR as anchor,
+    tokentype.ZTYPENAME as entry_type,
+    token.ZTOKENNAME as entry_name
+FROM
+    ZTOKENMETAINFORMATION meta
+    INNER JOIN ZTOKEN token ON meta.ZTOKEN = token.Z_PK
+    INNER JOIN ZTOKENTYPE tokentype on token.ZTOKENTYPE = tokentype.Z_PK
+WHERE
+    meta.ZANCHOR IN ({seq})
+"""
+
+ANCHOR_RE = re.compile(r"""<a id="(ga[a-z0-9]{32})"><\/a>""")
 
 
 class DocsetException(RuntimeError):
@@ -81,6 +100,64 @@ def build_index():
         raise DocsetException("Failed to build docset index") from e
 
 
+def lookup_tokens(conn, uuids):
+    seq = ", ".join("?" for _ in uuids)
+    query_seq = TOKEN_QUERY.format(seq=seq)
+
+    tokens = {}
+
+    cur = conn.cursor()
+
+    for row in cur.execute(query_seq, uuids):
+        tokens[row[0]] = (row[1], row[2])
+
+    return tokens
+
+
+def add_toc_to_file(conn, html_path):
+    with open(html_path, "r") as f:
+        html = f.read()
+
+    uuids = []
+
+    for match in ANCHOR_RE.finditer(html):
+        uuids.append(match.group(1))
+
+    if not uuids:
+        # Nothing to do, leave file as-is
+        return
+
+    tokens = lookup_tokens(conn, uuids)
+
+    def add_anchor(match):
+        uuid = match.group(1)
+
+        if uuid not in tokens:
+            return match.group(0)
+
+        original = match.group(0)
+        entry_type = tokens[uuid][0]
+        entry_name = url_escape(tokens[uuid][1])
+
+        anchor_name = f"//apple_ref/cpp/{entry_type}/{entry_name}"
+
+        return f"{original}<a name=\"{anchor_name}\" class=\"dashAnchor\"></a>"
+
+    html = ANCHOR_RE.sub(add_anchor, html)
+
+    with open(html_path, "w") as f:
+        f.write(html)
+
+
+def add_tocs():
+    conn = sqlite3.connect(f"file://{DB_PATH}?mode=ro", uri=True)
+
+    for html_path in DOCSET_DOCUMENTS_DIR.glob("*.html"):
+        add_toc_to_file(conn, html_path)
+
+    conn.close()
+
+
 def make_archive():
     subprocess.run(
         ["tar", "--exclude=\'.DS_Store\'", "-cvzf", ARCHIVE_PATH, DOCSET_DIR],
@@ -94,6 +171,7 @@ def make_docset():
     create_dirs()
     copy_files()
     build_index()
+    add_tocs()
     make_archive()
 
 
