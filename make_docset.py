@@ -159,8 +159,11 @@ def add_tocs():
 
 
 def make_archive():
+    archive_rel = ARCHIVE_PATH.relative_to(ROOT_DIR)
+    docset_rel = DOCSET_DIR.relative_to(ROOT_DIR)
+
     subprocess.run(
-        ["tar", "--exclude=\'.DS_Store\'", "-cvzf", ARCHIVE_PATH, DOCSET_DIR],
+        ["tar", "--exclude=\'.DS_Store\'", "-cvzf", archive_rel, docset_rel],
         cwd=ROOT_DIR
     )
 
